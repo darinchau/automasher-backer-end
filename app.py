@@ -73,8 +73,8 @@ def split(audio_dir: str):
 def predict_beats(x, fold = 4):
     model.load_state_dict(torch.load(PARAM_PATH[fold], map_location=torch.device('cpu'))['state_dict'])
 
-    # device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
-    device = torch.device('cpu')
+    device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
+    # device = torch.device('cpu')
     model.to(device)
     model.eval()
 
@@ -111,7 +111,7 @@ def main():
     if len(sys.argv) < 3:
         print("Usage: python main.py <audio_file> <output_json>")
         return
-    
+
     audio_file = sys.argv[1]
     x = split(audio_file)
     dbn_downbeat_pred, dbn_beat_pred = predict_beats(x)
