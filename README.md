@@ -11,4 +11,5 @@ Contains the code for a simple microservice for beat detection. Because the inst
 8. pip install uvicorn==0.22.0 fastapi==0.95.1 librosa==0.10.1
 9. mv ./Beat-Transformer/code/DilatedTransformer.py ./DilatedTransformer.py
 10. mv ./Beat-Transformer/code/DilatedTransformerLayer.py ./DilatedTransformerLayer.py
-11. Pray
+11. pip install numpy==1.26.4
+12. Pray

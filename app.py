@@ -28,11 +28,28 @@ shutil.move('./Beat-Transformer/code/DilatedTransformer.py', './DilatedTransform
 shutil.move('./Beat-Transformer/code/DilatedTransformerLayer.py', './DilatedTransformerLayer.py')
 """)
 
+PARAM_PATH = {
+    0: "./Beat-Transformer/checkpoint/fold_0_trf_param.pt",
+    1: "./Beat-Transformer/checkpoint/fold_1_trf_param.pt",
+    2: "./Beat-Transformer/checkpoint/fold_2_trf_param.pt",
+    3: "./Beat-Transformer/checkpoint/fold_3_trf_param.pt",
+    4: "./Beat-Transformer/checkpoint/fold_4_trf_param.pt",
+    5: "./Beat-Transformer/checkpoint/fold_5_trf_param.pt",
+    6: "./Beat-Transformer/checkpoint/fold_6_trf_param.pt",
+    7: "./Beat-Transformer/checkpoint/fold_7_trf_param.pt"
+}
+
+FOLD = 4
+device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
+
 # Audio separator
 separator = Separator('spleeter:5stems')
 
 # The audio model
 model = Demixed_DilatedTransformerModel(attn_len=5, instr=5, ntoken=2, dmodel=256, nhead=8, d_hid=1024, nlayers=9, norm_first=True)
+model.load_state_dict(torch.load(PARAM_PATH[FOLD], map_location=torch.device('cpu'), weights_only=False)['state_dict'])
+model.to(device)
+model.eval()
 
 #Initialize DBN Beat Tracker to locate beats from beat activation
 beat_tracker = DBNBeatTrackingProcessor(min_bpm=55.0, max_bpm=215.0, fps=44100/1024, transition_lambda=100, observation_lambda=6, num_tempi=None, threshold=0.2)
@@ -70,14 +87,7 @@ def split(audio_dir: str):
     return x
 
 # Predict beats from the audio
-def predict_beats(x, fold = 4):
-    model.load_state_dict(torch.load(PARAM_PATH[fold], map_location=torch.device('cpu'))['state_dict'])
-
-    device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
-    # device = torch.device('cpu')
-    model.to(device)
-    model.eval()
-
+def predict_beats(x):
     with torch.no_grad():
         model_input = torch.from_numpy(x).unsqueeze(0).float().to(device)
         activation, _ = model(model_input)
@@ -94,17 +104,6 @@ def predict_beats(x, fold = 4):
     dbn_downbeat_pred = downbeat_tracker(combined_act)
     dbn_downbeat_pred = dbn_downbeat_pred[dbn_downbeat_pred[:, 1] == 1][:, 0]
     return dbn_downbeat_pred, dbn_beat_pred
-
-PARAM_PATH = {
-    0: "./Beat-Transformer/checkpoint/fold_0_trf_param.pt",
-    1: "./Beat-Transformer/checkpoint/fold_1_trf_param.pt",
-    2: "./Beat-Transformer/checkpoint/fold_2_trf_param.pt",
-    3: "./Beat-Transformer/checkpoint/fold_3_trf_param.pt",
-    4: "./Beat-Transformer/checkpoint/fold_4_trf_param.pt",
-    5: "./Beat-Transformer/checkpoint/fold_5_trf_param.pt",
-    6: "./Beat-Transformer/checkpoint/fold_6_trf_param.pt",
-    7: "./Beat-Transformer/checkpoint/fold_7_trf_param.pt"
-}
 
 def main():
     # Let's pass through command line. I will regret this later am I
